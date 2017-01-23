@@ -9,3 +9,4 @@
 
 double POLY_VALIDITY = 0.75;
 int sn25d_t = 20;
+int numCores = 1;

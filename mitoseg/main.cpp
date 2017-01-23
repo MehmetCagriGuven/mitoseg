@@ -47,6 +47,8 @@ void displayHelp() {
 	printf(
 			"\t-thick <z-thickness>\t\t\tSpecify snake z-thickness\n\t\t\t\t\t\tbetween 5-500 (default: 20)\n\t\t\t\t\t\tset 'full' to use z-range\n");
 	printf(
+			"\t-cores <# of cpu cores>\t\t\tSet # of cpu cores to utilize\n\t\t\t\t\t\t(default: 1)\n");
+	printf(
 			"\n\nThe options -zrange, -psize and <filename pattern> are mandatory input.\n\n");
 	printf("Example:\n");
 	printf("\tmitoseg -zrange 30 100 -psize 2.0 dataset_slice%%04d.tif\n");
@@ -77,12 +79,12 @@ int main(int argc, char** argv) {
 						|| SLICE_START > SLICE_END) {
 					printf("Error: Invalid parameter for -zrange\n");
 					printf("Use mitoseg with no parameter for help\n\n");
-					exit(0);
+					exit(-1);
 				}
 			} else {
 				printf("Error: Insufficient parameter for -zrange\n");
 				printf("Use mitoseg with no parameter for help\n\n");
-				exit(0);
+				exit(-1);
 			}
 		} else if (strcmp(argv[c], "-psize") == 0) {
 			if (c + 1 < argc) {
@@ -91,12 +93,12 @@ int main(int argc, char** argv) {
 				if (RESOLUTION <= 0) {
 					printf("Error: Invalid parameter for -psize\n");
 					printf("Use mitoseg with no parameter for help\n\n");
-					exit(0);
+					exit(-1);
 				}
 			} else {
 				printf("Error: Insufficient parameter for -psize\n");
 				printf("Use mitoseg with no parameter for help\n\n");
-				exit(0);
+				exit(-1);
 			}
 		} else if (strcmp(argv[c], "-roi") == 0) {
 			if (c + 4 < argc) {
@@ -108,12 +110,12 @@ int main(int argc, char** argv) {
 				if (ROI_X < 0 || ROI_Y < 0 || ROI_W <= 0 || ROI_H <= 0) {
 					printf("Error: Invalid parameter for -roi\n");
 					printf("Use mitoseg with no parameter for help\n\n");
-					exit(0);
+					exit(-1);
 				}
 			} else {
 				printf("Error: Insufficient parameter for -roi\n");
 				printf("Use mitoseg with no parameter for help\n\n");
-				exit(0);
+				exit(-1);
 			}
 		} else if (strcmp(argv[c], "-src") == 0) {
 			if (c + 1 < argc) {
@@ -122,7 +124,7 @@ int main(int argc, char** argv) {
 			} else {
 				printf("Error: Insufficient parameter for -src\n");
 				printf("Use mitoseg with no parameter for help\n\n");
-				exit(0);
+				exit(-1);
 			}
 		} else if (strcmp(argv[c], "-dst") == 0) {
 			if (c + 1 < argc) {
@@ -131,7 +133,7 @@ int main(int argc, char** argv) {
 			} else {
 				printf("Error: Insufficient parameter for -dst\n");
 				printf("Use mitoseg with no parameter for help\n\n");
-				exit(0);
+				exit(-1);
 			}
 		} else if (strcmp(argv[c], "-phase") == 0) {
 			if (c + 1 < argc) {
@@ -140,12 +142,12 @@ int main(int argc, char** argv) {
 				if (phaseNum < 1 || phaseNum > 3) {
 					printf("Error: Phase # must be between 1 and 3.\n");
 					printf("Use mitoseg with no parameter for help\n\n");
-					exit(0);
+					exit(-1);
 				}
 			} else {
 				printf("Error: Insufficient parameter for -phase\n");
 				printf("Use mitoseg with no parameter for help\n\n");
-				exit(0);
+				exit(-1);
 			}
 		} else if (strcmp(argv[c], "-valid") == 0) {
 			if (c + 1 < argc) {
@@ -155,12 +157,12 @@ int main(int argc, char** argv) {
 					printf(
 							"Error: Invalid parameter for -valid (must be between 0-1)\n");
 					printf("Use mitoseg with no parameter for help\n\n");
-					exit(0);
+					exit(-1);
 				}
 			} else {
 				printf("Error: Insufficient parameter for -valid\n");
 				printf("Use mitoseg with no parameter for help\n\n");
-				exit(0);
+				exit(-1);
 			}
 		} else if (strcmp(argv[c], "-thick") == 0) {
 			if (c + 1 < argc) {
@@ -172,19 +174,32 @@ int main(int argc, char** argv) {
 						printf(
 								"Error: Invalid parameter for -thick (must be between 5-500)\n");
 						printf("Use mitoseg with no parameter for help\n\n");
-						exit(0);
+						exit(-1);
 					}
 				}
 				c++;
 			} else {
 				printf("Error: Insufficient parameter for -thick\n");
 				printf("Use mitoseg with no parameter for help\n\n");
-				exit(0);
+				exit(-1);
+			}
+		} else if (strcmp(argv[c], "-cores") == 0) {
+			if (c + 1 < argc) {
+				numCores = atoi(argv[++c]);
+				if (numCores < 1 || numCores > 256) {
+					printf("Error: # of cores must be between 1 and 256.\n");
+					printf("Use mitoseg with no parameter for help\n\n");
+					exit(-1);
+				}
+			} else {
+				printf("Error: Insufficient parameter for -cores\n");
+				printf("Use mitoseg with no parameter for help\n\n");
+				exit(-1);
 			}
 		} else if (argv[c][0] == '-') {
 			printf("Error: Unknown option %s\n", argv[c]);
 			printf("Use mitoseg with no parameter for help\n\n");
-			exit(0);
+			exit(-1);
 		} else {
 			strcpy(FNAME, argv[c]);
 			fnameSet = true;
@@ -195,7 +210,7 @@ int main(int argc, char** argv) {
 		printf(
 				"The options -zrange, -psize and <filename pattern> are mandatory input.\n");
 		printf("Use mitoseg with no parameter for help\n\n");
-		exit(0);
+		exit(-1);
 	}
 	if (thickSet) {
 		sn25d_t = SLICE_END - SLICE_START + 1;
@@ -203,7 +218,7 @@ int main(int argc, char** argv) {
 	if (SLICE_END - SLICE_START + 1 < sn25d_t) {
 		printf("Error: Z-range must contain at least %d slices.\n", sn25d_t);
 		printf("Use mitoseg with no parameter for help\n\n");
-		exit(0);
+		exit(-1);
 	}
 	printf("Using pixel size: %.2fnm\n", RESOLUTION);
 	if (!roiSet) {
@@ -223,6 +238,7 @@ int main(int argc, char** argv) {
 	else if (DESTPATH[strlen(DESTPATH) - 1] != '/')
 		strcat(DESTPATH, "/");
 	printf("Destination path: %s\n", DESTPATH);
+	printf("Utilized cpu cores: %d\n", numCores);
 	printf("Executing: ");
 	if (phaseSet)
 		printf("Phase #%d\n", phaseNum);

@@ -8,6 +8,9 @@
 #ifndef SETTINGS_H_
 #define SETTINGS_H_
 
+// GENERAL CONFIGURATIONS
+extern int numCores;
+
 ///////////// PHASE 1 PARAMS /////////////
 // Visualization params
 #define VISUAL_LE_SSIZE 8

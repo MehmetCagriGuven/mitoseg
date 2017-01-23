@@ -8,6 +8,10 @@
 #include "phase1_main.h"
 
 #include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+sem_t sem;
 
 void mainFunctionPhase1(int s) {
 	IplImage *originalImage = 0, *roiImage = 0;
@@ -212,12 +216,50 @@ void mainFunctionPhase1(int s) {
 		free(clist_hix);
 }
 
+void *threadPhase1(void *t_data) {
+	int s = *(int *) t_data;
+
+	printf("Processing slice #%d...\n", s);
+	mainFunctionPhase1(s);
+
+	sem_post(&sem);
+	pthread_exit(NULL);
+}
+
 void startPhase1() {
-	int s;
+	int s, t;
+	int rc;
+	int numThreads = SLICE_END - SLICE_START + 1;
+	pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * numThreads);
+	pthread_attr_t attr;
+	int *t_data = (int *) malloc(sizeof(int) * numThreads);
+	sem_init(&sem, 0, numCores);
+	void *status;
+
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
 	printf(">>>> PHASE #1\n");
-	for (s = SLICE_START; s <= SLICE_END; s++) {
-		printf("Processing slice #%d...\n", s);
-		mainFunctionPhase1(s);
+	for (s = SLICE_START, t = 0; s <= SLICE_END; s++, t++) {
+		sem_wait(&sem);
+		t_data[t] = s;
+		rc = pthread_create(&threads[t], &attr, threadPhase1,
+				(void *) &t_data[t]);
+		if (rc) {
+			printf("Error: Unable to create thread!\n");
+			exit(-1);
+		}
 	}
+
+	pthread_attr_destroy(&attr);
+	for (t = 0; t < numThreads; t++) {
+		rc = pthread_join(threads[t], &status);
+		if (rc) {
+			printf("Error: Unable to join thread!\n");
+			exit(-1);
+		}
+	}
+
+	free(threads);
+	free(t_data);
 }
