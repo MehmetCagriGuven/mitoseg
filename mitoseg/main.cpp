@@ -214,6 +214,8 @@ int main(int argc, char** argv) {
 	}
 	if (thickSet) {
 		sn25d_t = SLICE_END - SLICE_START + 1;
+		if (sn25d_t < 5)
+			sn25d_t = 5;
 	}
 	if (SLICE_END - SLICE_START + 1 < sn25d_t) {
 		printf("Error: Z-range must contain at least %d slices.\n", sn25d_t);

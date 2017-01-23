@@ -7,7 +7,13 @@
 
 #include "snake25d.h"
 #include "detection.h"
+#include <pthread.h>
+#include <semaphore.h>
 #include <math.h>
+
+sem_t sem2;
+pthread_mutex_t addlock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t tnslock = PTHREAD_MUTEX_INITIALIZER;
 
 curveList* loadCurveList(int s, char const *tag) {
 	curveList *cl = (curveList *) malloc(sizeof(curveList));
@@ -812,7 +818,9 @@ int inflationSnake25d(dataPacket *dp, const double initx, const double inity,
 				// Validation
 				validateSnake25d(dp, outputSnake);
 				// Add to list
+				pthread_mutex_lock(&addlock);
 				addSnake(outputSnakeList, outputSnake);
+				pthread_mutex_unlock(&addlock);
 				// Report validity
 				if (DT_REPORT) {
 					reportValidation(dp, outputSnake);
@@ -1026,37 +1034,101 @@ int findInitialPointsWithinZRange(dataPacket *dp, CvPoint **pts, int start_z,
 	return n_out;
 }
 
+struct t_param {
+	dataPacket *dp;
+	double ix, iy;
+	int start_z, end_z;
+	double ar_z;
+	snake25dList **outputSnakeList;
+	volatile int *returnValue;
+};
+
+void *threadPhase2(void *t_data) {
+	struct t_param *p = (struct t_param *) t_data;
+	int ns;
+	ns = inflationSnake25d(p->dp, p->ix, p->iy, p->start_z, p->end_z,
+	SN25D_W_TENSION,
+	SN25D_W_CURVATURE,
+	SN25D_W_ZTENSION,
+	SN25D_W_ZCURVATURE,
+	SN25D_W_ECURVE,
+	SN25D_W_EINF_MIN,
+	SN25D_W_EINF_MAX,
+	SN25D_W_EINF_STEP, p->ar_z, p->outputSnakeList);
+
+	pthread_mutex_lock(&tnslock);
+	*p->returnValue += ns;
+	pthread_mutex_unlock(&tnslock);
+	sem_post(&sem2);
+	pthread_exit(NULL);
+}
+
 int retrieveAllSnakes25d(dataPacket *dp, CvPoint *initPts, int n, int start_z,
 		int end_z, snake25dList **outputSnakeList) {
 	double ar_z = (int) LE_SSIZE_LO * TFACTOR / RESOLUTION;
 	double ix, iy;
 	int i;
-	int ns = 0, tns = 0;
+	volatile int tns = 0;
+
+	int t;
+	int rc;
+	int numThreads = n;
+	pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * numThreads);
+	pthread_attr_t attr;
+	struct t_param *t_data = (struct t_param *) malloc(
+			sizeof(struct t_param) * numThreads);
+	sem_init(&sem2, 0, numCores);
+	pthread_mutex_unlock(&addlock);
+	pthread_mutex_unlock(&tnslock);
+	void *status;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
 	// Report
 	printf("Using %d initial points (slices: %04d - %04d)...\n", n, start_z,
 			end_z);
 
 	for (i = 0; i < n; i++) {
-		printf("\rProcessing: %d / %d (Total # of snakes : %d)", i + 1, n, tns);
-		fflush(stdout);
+		sem_wait(&sem2);
 
 		ix = (double) initPts[i].x;
 		iy = (double) initPts[i].y;
 
-		ns = inflationSnake25d(dp, ix, iy, start_z, end_z,
-		SN25D_W_TENSION,
-		SN25D_W_CURVATURE,
-		SN25D_W_ZTENSION,
-		SN25D_W_ZCURVATURE,
-		SN25D_W_ECURVE,
-		SN25D_W_EINF_MIN,
-		SN25D_W_EINF_MAX,
-		SN25D_W_EINF_STEP, ar_z, outputSnakeList);
-		tns += ns;
+		// Set thread params
+		t_data[i].dp = dp;
+		t_data[i].ix = ix;
+		t_data[i].iy = iy;
+		t_data[i].start_z = start_z;
+		t_data[i].end_z = end_z;
+		t_data[i].ar_z = ar_z;
+		t_data[i].outputSnakeList = outputSnakeList;
+		t_data[i].returnValue = &tns;
+		//
+
+		printf("\rProcessing: %d / %d (Total # of snakes : %d)", i + 1, n, tns);
+		fflush(stdout);
+
+		rc = pthread_create(&threads[i], &attr, threadPhase2,
+				(void *) &t_data[i]);
+		if (rc) {
+			printf("Error: Unable to create thread!\n");
+			exit(-1);
+		}
+	}
+
+	pthread_attr_destroy(&attr);
+	for (t = 0; t < numThreads; t++) {
+		rc = pthread_join(threads[t], &status);
+		if (rc) {
+			printf("Error: Unable to join thread!\n");
+			exit(-1);
+		}
 	}
 
 	printf("\nTotal # of snakes : %d\n", tns);
+
+	free(threads);
+	free(t_data);
 
 	return tns;
 }

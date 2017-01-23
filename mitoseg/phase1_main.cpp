@@ -11,7 +11,8 @@
 #include <pthread.h>
 #include <semaphore.h>
 
-sem_t sem;
+sem_t sem1;
+pthread_mutex_t roilock = PTHREAD_MUTEX_INITIALIZER;
 
 void mainFunctionPhase1(int s) {
 	IplImage *originalImage = 0, *roiImage = 0;
@@ -35,7 +36,10 @@ void mainFunctionPhase1(int s) {
 	loadSlice(s, &originalImage);
 
 	// Get image roi
+	if (s != SLICE_START)
+		pthread_mutex_lock(&roilock);
 	getImageROI(originalImage, &roiImage); // roi image is created inside function as type of original image
+	pthread_mutex_unlock(&roilock);
 
 	// Convert to gray image
 	grayImage = cvCreateImage(cvSize(roiImage->width, roiImage->height), 8, 1);
@@ -222,7 +226,7 @@ void *threadPhase1(void *t_data) {
 	printf("Processing slice #%d...\n", s);
 	mainFunctionPhase1(s);
 
-	sem_post(&sem);
+	sem_post(&sem1);
 	pthread_exit(NULL);
 }
 
@@ -233,7 +237,8 @@ void startPhase1() {
 	pthread_t *threads = (pthread_t *) malloc(sizeof(pthread_t) * numThreads);
 	pthread_attr_t attr;
 	int *t_data = (int *) malloc(sizeof(int) * numThreads);
-	sem_init(&sem, 0, numCores);
+	sem_init(&sem1, 0, numCores);
+	pthread_mutex_trylock(&roilock);
 	void *status;
 
 	pthread_attr_init(&attr);
@@ -241,7 +246,7 @@ void startPhase1() {
 
 	printf(">>>> PHASE #1\n");
 	for (s = SLICE_START, t = 0; s <= SLICE_END; s++, t++) {
-		sem_wait(&sem);
+		sem_wait(&sem1);
 		t_data[t] = s;
 		rc = pthread_create(&threads[t], &attr, threadPhase1,
 				(void *) &t_data[t]);

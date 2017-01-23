@@ -42,8 +42,7 @@ void startPhase2() {
 
 	int s, start_z, end_z = 0;
 
-	for (s = SLICE_START; s + sn25d_t - 1 <= SLICE_END; s += sn25d_t)
-	{
+	for (s = SLICE_START; s + sn25d_t - 1 <= SLICE_END; s += sn25d_t) {
 		start_z = s;
 		end_z = s + sn25d_t - 1;
 
