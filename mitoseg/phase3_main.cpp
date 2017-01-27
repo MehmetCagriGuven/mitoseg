@@ -50,6 +50,8 @@ void startPhase3() {
 	int start_z = 0, end_z = 0, s;
 	Visualizer v;
 
+	printf(">>>> PHASE #3\n");
+
 	// Visualize initial points
 	CvPoint *pts = NULL;
 	int n_pts;
@@ -67,7 +69,7 @@ void startPhase3() {
 		v.setFileNameTag(DESTPATH, "00_image_", "");
 		v.setMarkerBuf(pts, n_pts, start_z, LE_SSIZE_LO);
 		v.update();
-		saveImage(start_z, "09_initPts_", "", v.outputImage);
+		saveImage(start_z, "10_initPts_", "", v.outputImage);
 	}
 	v.setMarkerBuf(NULL);
 	if (pts)
@@ -104,14 +106,14 @@ void startPhase3() {
 		v.setStartSlice(s);
 		v.setNumSlices(1);
 		v.update();
-		saveImage(s, "10_mitos_", "", v.outputImage);
+		saveImage(s, "11_mitos_", "", v.outputImage);
 	}
 	v.setPolyBuf(polyArrayMerged, n_poly_merged, LE_SSIZE_LO);
 	for (s = z1; s <= z2; s++) {
 		v.setStartSlice(s);
 		v.setNumSlices(1);
 		v.update();
-		saveImage(s, "11_mitos_merged_", "", v.outputImage);
+		saveImage(s, "12_mitos_merged_", "", v.outputImage);
 	}
 	savePolyArrayAsPLY(polyArrayMerged, n_poly_merged);
 

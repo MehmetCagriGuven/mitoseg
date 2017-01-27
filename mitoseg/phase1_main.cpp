@@ -153,14 +153,14 @@ void mainFunctionPhase1(int s) {
 	// Save Visual Images
 	saveImage(s, "00_image_", "", visualResmpImage);
 	saveImage(s, "01_bilateral_", "", visualBilateral);
-	saveImage(s, "01_smoothed_", "", visualSmoothed);
-	saveImage(s, "02_ridges_", "", visualRidges);
-	saveImage(s, "03_ridges_dir_", "", visualRidges_dir);
-	saveImage(s, "04_le_lo_", "", visualLE_lo);
-	saveImage(s, "05_le_hi_", "", visualLE_hi);
-	saveImage(s, "06_curves_lo_", "", visualCurves_lo);
-	saveImage(s, "07_curves_hi_", "", visualCurves_hi);
-	saveImage(s, "08_curves_hilo_", "", visualCurves_hilo);
+	saveImage(s, "02_smoothed_", "", visualSmoothed);
+	saveImage(s, "03_ridges_", "", visualRidges);
+	saveImage(s, "04_ridges_dir_", "", visualRidges_dir);
+	saveImage(s, "05_le_lo_", "", visualLE_lo);
+	saveImage(s, "06_le_hi_", "", visualLE_hi);
+	saveImage(s, "07_curves_lo_", "", visualCurves_lo);
+	saveImage(s, "08_curves_hi_", "", visualCurves_hi);
+	saveImage(s, "09_curves_hilo_", "", visualCurves_hilo);
 
 	// Free mem.
 	if (originalImage)
