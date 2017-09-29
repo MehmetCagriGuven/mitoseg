@@ -9,6 +9,7 @@
 #define PHASE3_MAIN_H_
 
 #include "visualizer.h"
+#include "imod.h"
 
 void startPhase3();
 

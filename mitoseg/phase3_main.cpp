@@ -56,8 +56,7 @@ void startPhase3() {
 	CvPoint *pts = NULL;
 	int n_pts;
 	int t_n_pts = 0;
-	for (s = SLICE_START; s + sn25d_t - 1 <= SLICE_END; s += sn25d_t)
-	{
+	for (s = SLICE_START; s + sn25d_t - 1 <= SLICE_END; s += sn25d_t) {
 		start_z = s;
 		end_z = s + sn25d_t - 1;
 		// Load initial pts
@@ -116,6 +115,16 @@ void startPhase3() {
 		saveImage(s, "12_mitos_merged_", "", v.outputImage);
 	}
 	savePolyArrayAsPLY(polyArrayMerged, n_poly_merged);
+
+	// Save as IMOD model
+	IplImage *img;
+	loadSlice(SLICE_START, &img);
+	int img_w = img->width;
+	int img_h = img->height;
+	cvReleaseImage(&img);
+	savePolyArrayAsIMOD(polyArrayMerged, n_poly_merged, img_w, img_h, SLICE_END,
+			LE_SSIZE_LO, 1.0);
+	//////
 
 	// Free mem.
 	if (snakeArray) {

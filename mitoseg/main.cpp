@@ -5,6 +5,8 @@
  *      Author: fst
  */
 
+#define VERSION "1.1"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -27,7 +29,7 @@ int phaseNum = 1;
 int thickParam = 0;
 
 void displayHelp() {
-	printf("MitoSeg v1.0 by FST\n");
+	printf("MitoSeg v" VERSION " by FST\n");
 	printf("Based on the paper:\n");
 	printf(
 			"Tasel, S.F., Mumcuoglu, E.U., Hassanpour, R.Z., Perkins, G., 2016.\nA validated active contour method driven by parabolic arc model\nfor detection and segmentation of mitochondria.\nJ. Struct. Biol. 194, 253–271. doi:10.1016/j.jsb.2016.03.002\n\n");
@@ -37,7 +39,7 @@ void displayHelp() {
 	printf("\t-zrange <start slice #> <end slice #>\tSpecify z-range\n");
 	printf("\t-psize <pixel size>\t\t\tSpecify pixel size as nm/px\n");
 	printf(
-			"\t-roi <top> <left> <width> <height>\tSpecify region of interest\n");
+			"\t-roi <left> <top> <width> <height>\tSpecify region of interest\n");
 	printf("\t-src <source directory>\t\t\tSpecify source directory\n");
 	printf("\t-dst <destination directory>\t\tSpecify destination directory\n");
 	printf(
