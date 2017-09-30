@@ -10,12 +10,12 @@
 
 #include "poly.h"
 
-#define IMOD_REVERSE_ENDIAN 	1
+#define IMOD_REVERSE_ENDIAN 	0
 
 int imod_endian_reverse(int x);
 float imod_endian_reverse(float x);
 
-#define IMOD_VALUE(x) (IMOD_REVERSE_ENDIAN ? x : imod_endian_reverse(x))
+#define IMOD_VALUE(x) (IMOD_REVERSE_ENDIAN ? (x) : imod_endian_reverse(x))
 
 #define IMOD_FILE_ID 0x494d4f44
 #define IMOD_VERSION_ID 0x56312e32
@@ -81,6 +81,6 @@ struct imod_mesh {
 };
 
 void savePolyArrayAsIMOD(poly25d *p, int n, int x_size, int y_size, int z_size,
-		double xy_scale, double z_scale);
+		double xy_scale, double z_scale, int x_shift, int y_shift);
 
 #endif /* IMOD_H_ */

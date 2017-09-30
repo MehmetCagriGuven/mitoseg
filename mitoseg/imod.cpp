@@ -20,7 +20,7 @@ float imod_endian_reverse(float x) {
 }
 
 void savePolyArrayAsIMOD(poly25d *p, int n, int x_size, int y_size, int z_size,
-		double xy_scale, double z_scale) {
+		double xy_scale, double z_scale, int x_shift, int y_shift) {
 	FILE *f;
 	int id, k, i, j;
 	imod_model model;
@@ -45,13 +45,22 @@ void savePolyArrayAsIMOD(poly25d *p, int n, int x_size, int y_size, int z_size,
 	model.xmax = IMOD_VALUE(x_size);
 	model.ymax = IMOD_VALUE(y_size);
 	model.zmax = IMOD_VALUE(z_size);
+	model.blacklevel = IMOD_VALUE(0);
+	model.whitelevel = IMOD_VALUE(255);
+	model.xscale = IMOD_VALUE(1.f);
+	model.yscale = IMOD_VALUE(1.f);
+	model.zscale = IMOD_VALUE(1.f);
 	fwrite(&model, sizeof(imod_model), 1, f);
 	// Write objects' data
 	for (k = 0; k < n; k++) {
 		id = IMOD_VALUE(IMOD_OBJT_ID);
 		fwrite(&id, sizeof(int), 1, f);
 		memset(&objt, 0, sizeof(imod_objt));
-		objt.contsize = p[k].t;
+		objt.contsize = IMOD_VALUE(p[k].t);
+		objt.red = IMOD_VALUE(0.f);
+		objt.green = IMOD_VALUE(0.f);
+		objt.blue = IMOD_VALUE(1.f);
+		objt.symsize = 1;
 		sprintf(objt.name, "obj_%d", k + 1);
 		fwrite(&objt, sizeof(imod_objt), 1, f);
 		// Write object's contours
@@ -61,15 +70,19 @@ void savePolyArrayAsIMOD(poly25d *p, int n, int x_size, int y_size, int z_size,
 				id = IMOD_VALUE(IMOD_CONT_ID);
 				fwrite(&id, sizeof(int), 1, f);
 				memset(&cont, 0, sizeof(imod_cont));
-				cont.psize = ptr->n;
+				cont.psize = IMOD_VALUE(ptr->n);
 				fwrite(&cont, sizeof(imod_cont), 1, f);
 				// Write contour points
 				for (j = 0; j < ptr->n; j++) {
-					pt = (float) (ptr->vertex[j].x * xy_scale);
+					pt = (float) (ptr->vertex[j].x * xy_scale + x_shift);
+					pt = IMOD_VALUE(pt);
 					fwrite(&pt, sizeof(float), 1, f);
-					pt = (float) (ptr->vertex[j].y * xy_scale);
+					pt = (float) (y_size - 1 - ptr->vertex[j].y * xy_scale
+							- y_shift);
+					pt = IMOD_VALUE(pt);
 					fwrite(&pt, sizeof(float), 1, f);
 					pt = (float) ((p[k].start_z + i) * z_scale);
+					pt = IMOD_VALUE(pt);
 					fwrite(&pt, sizeof(float), 1, f);
 				}
 				ptr = ptr->next;

@@ -117,13 +117,13 @@ void startPhase3() {
 	savePolyArrayAsPLY(polyArrayMerged, n_poly_merged);
 
 	// Save as IMOD model
-	IplImage *img;
+	IplImage *img = NULL;
 	loadSlice(SLICE_START, &img);
 	int img_w = img->width;
 	int img_h = img->height;
 	cvReleaseImage(&img);
 	savePolyArrayAsIMOD(polyArrayMerged, n_poly_merged, img_w, img_h, SLICE_END,
-			LE_SSIZE_LO, 1.0);
+	LE_SSIZE_LO * TFACTOR / RESOLUTION, 1.0, ROI_X, ROI_Y);
 	//////
 
 	// Free mem.
