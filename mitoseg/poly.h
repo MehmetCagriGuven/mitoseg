@@ -42,5 +42,6 @@ int mergeArrayOfPoly25d(poly25d *parray, int n, double th, poly25d *outArray);
 int convertValidSnakesToPolyArray(snake25d *sarray, int n, double th,
 		poly25d **parray);
 void savePolyArrayAsPLY(poly25d *p, int n);
+int getTriangles(poly2d *p1, poly2d *p2, int (**faces)[3]);
 
 #endif /* POLY_H_ */
