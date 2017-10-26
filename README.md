@@ -25,7 +25,7 @@ Options:
 
     -cores <# of cpu cores>            Set # of cpu cores to utilize (default: 1). If your computer has multiple cpus or multiple cores, you can deploy some or all of them to work in collaboration in order to speed-up the process.
 
-The options -zrange, -psize and <filename pattern> are mandatory input.
+The options -zrange, -psize and \<filename pattern\> are mandatory input.
 
 Example:
 
