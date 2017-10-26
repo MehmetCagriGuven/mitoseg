@@ -3,7 +3,7 @@ Mitochondria Segmentation Tool
 
 Here are the command line options for the program:
 
-mitoseg -options parameters filename_pattern
+    mitoseg -options parameters filename_pattern
 
 Options:
 
